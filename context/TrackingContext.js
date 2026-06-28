@@ -5,7 +5,7 @@ import Web3Modal from "web3modal";
 import { ethers } from "ethers";
 import tracking from "./Tracking.json";
 
-const ContractAddress = "0xf26B32752cD346EfDC7990fe9D7391Aa22437860"; // Replace with your contract address
+const ContractAddress = "0x3ebf1252304383978299Aa0eef95b3448680fA20";
 const ContractABI = tracking.abi;
 
 const fetchContract = (signerOrProvider) =>
@@ -104,7 +104,18 @@ export const TrackingProvider = ({ children }) => {
       const signer = await provider.getSigner();
       const contract = fetchContract(signer);
 
+      // DEBUG: log chain + addresses to verify correct network
+      const network = await provider.getNetwork();
+      const signerAddr = await signer.getAddress();
+      console.log("=== DEBUG ===");
+      console.log("Chain ID:", network.chainId.toString());  // Sepolia = 11155111
+      console.log("Signer Address:", signerAddr);
+      console.log("Contract Address:", ContractAddress);
+      console.log("currentUser:", currentUser);
+      console.log("=============");
+
       const count = await contract.getShipmentsCount(currentUser);
+
       const fetchedShipments = [];
 
       if (Number(count) > 0) {
@@ -148,9 +159,11 @@ export const TrackingProvider = ({ children }) => {
       const signer = await provider.getSigner();
       const contract = fetchContract(signer);
 
-      await contract.completeShipment(currentUser, receiver, index, {
+      // Bug 2 Fix: await tx.wait() so the block is mined before fetching updated state
+      const tx = await contract.completeShipment(currentUser, receiver, Number(index), {
         gasLimit: 300000,
       });
+      await tx.wait();
       fetchShipments();
     } catch (error) {
       console.error("Error completing shipment:", error);
@@ -197,7 +210,9 @@ export const TrackingProvider = ({ children }) => {
       const signer = await provider.getSigner();
       const contract = fetchContract(signer);
 
-      await contract.startShipment(currentUser, receiver, index);
+      // Bug 1 Fix: await tx.wait() so the block is mined before fetching updated status
+      const tx = await contract.startShipment(currentUser, receiver, Number(index));
+      await tx.wait();
       fetchShipments();
     } catch (error) {
       console.error("Error starting shipment:", error);
@@ -213,6 +228,12 @@ export const TrackingProvider = ({ children }) => {
       const provider = new ethers.BrowserProvider(connection);
       const signer = await provider.getSigner();
       const contract = fetchContract(signer);
+
+      // Bug 9 Fix: Also listen for ShipmentInTransit event for real-time UI updates
+      contract.on("ShipmentInTransit", (sender, receiver, pickupTime, status, event) => {
+        console.log("ShipmentInTransit event received:", { sender, receiver, pickupTime, status });
+        fetchShipments();
+      });
 
       contract.on("ShipmentDelivered", (sender, receiver, deliveryTime, status, event) => {
         console.log("ShipmentDelivered event received:", { sender, receiver, deliveryTime, status });

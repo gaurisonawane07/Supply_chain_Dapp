@@ -48,7 +48,12 @@ export default ({ getModal, setGetModal, getShipment, getShipmentsCount, current
 
     const convertTime = (time) => {
         if (!time) return "N/A";
-        const newTime = new Date(time * 1000); 
+        // Bug 7 Fix: pickupTime is stored as milliseconds (from JS Date.getTime()),
+        // deliveryTime is block.timestamp (seconds). We handle both:
+        // If value looks like seconds (< year 3000 in seconds ≈ 32503680000), multiply by 1000.
+        // Otherwise treat as ms directly.
+        const ms = time < 1e12 ? time * 1000 : time;
+        const newTime = new Date(ms);
         const dataTime = new Intl.DateTimeFormat("en-US", {
             year: "numeric",
             month: "2-digit",
@@ -108,7 +113,12 @@ export default ({ getModal, setGetModal, getShipment, getShipmentsCount, current
                                 <p className="text-black">Delivery Time: {convertTime(singleShipmentData.deliveryTime)}</p>
                                 <p className="text-black">Distance: {singleShipmentData.distance || "N/A"}</p>
                                 <p className="text-black">Price: {singleShipmentData.price || "N/A"}</p>
-                                <p className="text-black">Status: {singleShipmentData.status || "N/A"}</p>
+                                {/* Bug 6 Fix: Map numeric enum to readable label; use explicit null check so status 0 (Pending) isn't swallowed by || */}
+                                <p className="text-black">Status: {
+                                  singleShipmentData.status === 0 ? "Pending" :
+                                  singleShipmentData.status === 1 ? "In Transit" :
+                                  singleShipmentData.status === 2 ? "Delivered" : "Unknown"
+                                }</p>
                                 <p className="text-black">Paid: {singleShipmentData.isPaid ? "Complete" : "Not Complete"}</p>
                             </div>
                         )}

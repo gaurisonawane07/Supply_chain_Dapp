@@ -28,7 +28,8 @@ export default ({ startModal, setStartModal, startShipment, onShipmentAction }) 
     setIsLoading(true);
 
     try {
-      await startShipment(shipmentData); 
+      // Bug 8 Fix: parse index to Number so contract receives uint256, not a string
+      await startShipment({ receiver: shipmentData.receiver, index: Number(shipmentData.index) });
       setStartModal(false);
       setShipmentData({ receiver: "", index: "" });
       onShipmentAction(); 
@@ -77,7 +78,7 @@ export default ({ startModal, setStartModal, startShipment, onShipmentAction }) 
               </div>
               <div className="relative mt-3">
                 <input
-                  type="text"
+                  type="number"
                   name="index"
                   placeholder="Index"
                   value={shipmentData.index}

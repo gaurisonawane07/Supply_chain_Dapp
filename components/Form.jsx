@@ -1,7 +1,7 @@
 "use client";
 import React, { useState } from "react";
 
-export default ({ setCreateShipmentModel, createShipmentModel, createShipment }) => {
+export default ({ setCreateShipmentModel, createShipmentModel, createShipment, onShipmentAction }) => {
   const [shipment, setShipment] = useState({
     receiver: "",
     pickupTime: "",
@@ -35,6 +35,8 @@ export default ({ setCreateShipmentModel, createShipmentModel, createShipment })
         price: Number(shipment.price),
       });
       setCreateShipmentModel(false);
+      // Bug 10 Fix: call onShipmentAction so the table refreshes after a new shipment is created
+      if (onShipmentAction) onShipmentAction();
     } catch (error) {
       console.error("Error creating item:", error);
       alert("Failed to create shipment. Please check the console for details.");

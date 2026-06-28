@@ -43,17 +43,8 @@ const Page = () => {
     setLoading(true);
     try {
       const allData = await getAllShipment();
-      // Update buffer with latest data
-      setShipmentBuffer((prevBuffer) => {
-        const newBuffer = [...prevBuffer];
-        allData.forEach((shipment) => {
-          if (newBuffer.length >= BUFFER_CAPACITY) {
-            newBuffer.shift(); // Remove oldest item if buffer is full
-          }
-          newBuffer.push(shipment); // Add new item
-        });
-        return newBuffer;
-      });
+      // Bug 4 Fix: Replace buffer with fresh data instead of appending (which caused duplicates)
+      setShipmentBuffer(allData);
     } catch (error) {
       console.error("Error fetching shipments:", error);
       setShipmentBuffer([]);
@@ -64,7 +55,7 @@ const Page = () => {
 
   useEffect(() => {
     fetchData(); // Fetch data on mount
-  }, [getAllShipment]); // Add getAllShipment as dependency
+  }, []); // Bug 5 Fix: removed getAllShipment from deps — it's a new reference every render, causing infinite loops
 
   // Function to refetch data after shipment actions
   const handleShipmentAction = async () => {

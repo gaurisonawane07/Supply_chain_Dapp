@@ -71,7 +71,8 @@ contract Tracking {
         shipment.deliveryTime = block.timestamp;
         uint256 amount = shipment.price;
 
-        payable(shipment.sender).transfer(amount);
+        // Bug 3 Fix: Transfer payment to the receiver (delivery recipient), not back to the sender (payer)
+        payable(shipment.receiver).transfer(amount);
         shipment.isPaid = true;
 
         emit ShipmentDelivered(_sender, _receiver, shipment.deliveryTime, ShipmentStatus.DELIVERED);

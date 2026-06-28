@@ -2,13 +2,18 @@
 const hre = require("hardhat");
 
 async function main() {
+    const [deployer] = await hre.ethers.getSigners();
+    console.log("Deploying with wallet address:", deployer.address);
+    const balance = await hre.ethers.provider.getBalance(deployer.address);
+    console.log("Wallet balance:", hre.ethers.formatEther(balance), "ETH");
+
     console.log("Starting deployment...");
     const Tracking = await hre.ethers.getContractFactory("Tracking");
     console.log("Contract factory obtained...");
     const tracking = await Tracking.deploy();
     console.log("Deployment transaction sent...");
-    await tracking.waitForDeployment(); // Correct way to wait for deployment
-    console.log("Contract deployed to:", await tracking.getAddress()); // Correct way to get the contract address
+    await tracking.waitForDeployment();
+    console.log("Contract deployed to:", await tracking.getAddress());
     console.log("Deployment complete.");
 }
 
