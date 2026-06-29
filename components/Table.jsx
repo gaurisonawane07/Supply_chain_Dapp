@@ -3,13 +3,17 @@ export default ({ setCreateShipmentModel, allShipmentsdata }) => {
     if (!time) {
       return "No Date";
     }
-    const newTime = new Date(time);
+    // block.timestamp (Solidity) is in seconds; JS Date expects milliseconds.
+    // Detect: if value < 1e12 it's in seconds → multiply by 1000
+    const ms = time < 1_000_000_000_000 ? time * 1000 : time;
+    const newTime = new Date(ms);
     return new Intl.DateTimeFormat("en-US", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
     }).format(newTime);
   };
+
 
   return (
     <div className="max-w-screen-xl mx-auto px-4 md:px-8">
