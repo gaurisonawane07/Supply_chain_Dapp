@@ -54,8 +54,10 @@ const Page = () => {
   };
 
   useEffect(() => {
-    fetchData(); // Fetch data on mount
-  }, []); // Bug 5 Fix: removed getAllShipment from deps — it's a new reference every render, causing infinite loops
+    if (currentUser) {
+      fetchData(); // Re-fetch whenever wallet connects or changes
+    }
+  }, [currentUser]); // Re-run when wallet connects
 
   // Function to refetch data after shipment actions
   const handleShipmentAction = async () => {
